@@ -36,6 +36,36 @@
           "name": "Period STD",
           "notation": "T<sub>std</sub>",
           "units": "s"
+        },
+        "positiveMax": {
+          "name": "Positive Max",
+          "notation": "H<sub>max</sub>",
+          "units": "s"
+        },
+        "positiveMin": {
+          "name": "Positive Min",
+          "notation": "H<sub>min</sub>",
+          "units": "s"
+        },
+        "negativeMax": {
+          "name": "Negative Max",
+          "notation": "L<sub>max</sub>",
+          "units": "s"
+        },
+        "negativeMin": {
+          "name": "Negative Min",
+          "notation": "L<sub>min</sub>",
+          "units": "s"
+        },
+        "positiveWidth": {
+          "name": "Positive Width",
+          "notation": "H<sub>width</sub>",
+          "units": "s"
+        },
+        "negativeWidth": {
+          "name": "Negative Width",
+          "notation": "L<sub>Width</sub>",
+          "units": "s"
         }
       }
     }
