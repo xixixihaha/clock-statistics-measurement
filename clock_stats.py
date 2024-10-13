@@ -9,9 +9,15 @@ FREQUENCY_AVG = 'frequencyAvg'
 FREQUENCY_MIN = 'frequencyMin'
 FREQUENCY_MAX = 'frequencyMax'
 PERIOD_STD_DEV = 'periodStdDev'
+POSITIVE_MAX = 'positiveMax'
+POSITIVE_MIN = 'positiveMin'
+NEGATIVE_MAX = 'negativeMax'
+NEGATIVE_MIN = 'negativeMin'
+POSITIVE_WIDTH = 'positiveWidth'
+NEGATIVE_WIDTH = 'negativeWidth'
 
 class ClockStatsMeasurer(DigitalMeasurer):
-    supported_measurements = [EDGES_RISING, EDGES_FALLING, FREQUENCY_AVG, PERIOD_STD_DEV, FREQUENCY_MIN, FREQUENCY_MAX]
+    supported_measurements = [EDGES_RISING, EDGES_FALLING, FREQUENCY_AVG, PERIOD_STD_DEV, FREQUENCY_MIN, FREQUENCY_MAX, POSITIVE_MAX, POSITIVE_MIN, NEGATIVE_MAX, NEGATIVE_MIN,POSITIVE_WIDTH,NEGATIVE_WIDTH]
 
     def __init__(self, requested_measurements):
         super().__init__(requested_measurements)
@@ -27,6 +33,14 @@ class ClockStatsMeasurer(DigitalMeasurer):
         self.full_period_count = 0
         self.running_mean_period = 0
         self.running_m2_period = 0
+        
+        self.prevTime = None
+        self.pos_max = None
+        self.pos_min = None
+        self.neg_max = None
+        self.neg_min = None
+        self.pos_width = None
+        self.neg_width = None
 
     def process_data(self, data):
         for t, bitstate in data:
@@ -48,6 +62,25 @@ class ClockStatsMeasurer(DigitalMeasurer):
                 self.running_mean_period += delta / self.full_period_count
                 delta2 = float(current_period) - self.running_mean_period
                 self.running_m2_period += delta * delta2
+
+            if self.prevTime is None:
+                self.prevTime = t
+            else:
+                diff = t - self.prevTime
+                if bitstate:
+                    if self.neg_max is None or  self.neg_max < diff:
+                        self.neg_max = diff
+                    if self.neg_min is None or self.neg_min > diff:
+                        self.neg_min = diff
+                    self.neg_width += diff
+                else:
+                    if self.pos_max is None or self.pos_max < diff:
+                        self.pos_max = diff
+                    if self.pos_min is None or self.pos_min > diff:
+                        self.pos_min = diff
+                    self.pos_width += diff
+                self.prevTime = t
+                
             if bitstate:
                 self.edges_rising += 1
             else:
@@ -84,4 +117,18 @@ class ClockStatsMeasurer(DigitalMeasurer):
                 period_variance = self.running_m2_period / (self.full_period_count - 1)
                 values[PERIOD_STD_DEV] = sqrt(period_variance)
 
+        if POSITIVE_MAX in self.requested_measurements:
+            values[POSITIVE_MAX] = self.pos_max
+        if POSITIVE_MIN in self.requested_measurements:
+            values[POSITIVE_MIN] = self.pos_min
+        if POSITIVE_MIN in self.requested_measurements:
+            values[NEGATIVE_MAX] = self.neg_max
+        if POSITIVE_MIN in self.requested_measurements:
+            values[NEGATIVE_MIN] = self.neg_min
+
+        if POSITIVE_WIDTH in self.requested_measurements:
+            values[POSITIVE_WIDTH] = self.pos_width
+        if NEGATIVE_WIDTH in self.requested_measurements:
+            values[NEGATIVE_WIDTH] = self.neg_width
+            
         return values
